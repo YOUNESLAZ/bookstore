@@ -1,28 +1,33 @@
 import React, { useEffect, useState } from "react";
-
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import Slider from "react-slick";
-
 import axios from "axios";
-
+import Slider from "react-slick";
 import Cards from "./Cards";
-function Freebook() {
-  const [book, setBook] = useState([]);
-  useEffect(() => {
-    const getBook = async () => {
-      try {
-        const res = await axios.get("http://localhost:4001/book");
 
-        const data = res.data.filter((data) => data.category === "Free");
-        console.log(data);
-        setBook(data);
+function Freebook() {
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get("http://localhost:4001/book");
+        const data = response.data.filter((book) => book.category === "Free");
+        setBooks(data);
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching free books:", error);
       }
     };
-    getBook();
+
+    fetchBooks();
   }, []);
+
+  const handleDeleteBook = async (bookId) => {
+    try {
+      await axios.delete(`http://localhost:4001/book/${bookId}`);
+      setBooks((prevBooks) => prevBooks.filter((book) => book._id !== bookId));
+    } catch (error) {
+      console.error("Error deleting book:", error);
+    }
+  };
 
   var settings = {
     dots: true,
@@ -58,27 +63,35 @@ function Freebook() {
       },
     ],
   };
-  return (
-    <>
-      <div className=" max-w-screen-2xl container mx-auto md:px-20 px-4">
-        <div>
-          <h1 className="font-semibold text-xl pb-2">Free Offered Courses</h1>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-            Accusantium veritatis alias pariatur ad dolor repudiandae eligendi
-            corporis nulla non suscipit, iure neque earum?
-          </p>
-        </div>
 
-        <div>
-          <Slider {...settings}>
-            {book.map((item) => (
-              <Cards item={item} key={item.id} />
-            ))}
-          </Slider>
-        </div>
+  return (
+    <div className="max-w-screen-2xl container mx-auto md:px-20 px-4">
+      <div>
+        <h1 className="font-semibold text-xl pb-2">Free Offered Courses</h1>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium
+          veritatis alias pariatur ad dolor repudiandae eligendi corporis nulla
+          non suscipit, iure neque earum?
+        </p>
       </div>
-    </>
+
+      <div>
+        <Slider {...settings}>
+          {books.map((book) => (
+            <div key={book._id}>
+              <Cards item={book} />
+              <button
+                onClick={() => handleDeleteBook(book._id)}
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 duration-300"
+              >
+                Delete Book
+              </button>
+            </div>
+          ))}
+        </Slider>
+      </div>
+    </div>
   );
 }
+
 export default Freebook;
